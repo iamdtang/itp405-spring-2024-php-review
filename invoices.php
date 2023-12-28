@@ -5,10 +5,21 @@
     FROM invoices
     INNER JOIN customers
     ON invoices.CustomerId = customers.CustomerId
-    ORDER BY invoices.InvoiceDate DESC
   ';
 
+  if (isset($_GET['q'])) {
+    $sql = "$sql WHERE customers.FirstName LIKE :first_name";
+  }
+
+  $sql = "$sql ORDER BY invoices.InvoiceDate DESC";
+
   $statement = $pdo->prepare($sql);
+
+  if (isset($_GET['q'])) {
+    $boundSearchParam = '%' . $_GET['q'] . '%';
+    $statement->bindParam(':first_name', $boundSearchParam);
+  }
+
   $statement->execute();
   $invoices = $statement->fetchAll(PDO::FETCH_OBJ);
 ?>
@@ -24,6 +35,16 @@
 <body>
   <div class="container">
     <h1>Invoices</h1>
+
+    <form action="invoices.php" method="GET" class="mb-3">
+      <input
+        type="search"
+        name="q"
+        class="form-control"
+        placeholder="Search by first name"
+        value="<?php echo isset($_GET['q']) ? $_GET['q'] : '' ?>"
+      />
+    </form>
 
     <table class="table table-striped">
       <thead>
